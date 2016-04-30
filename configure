@@ -1,0 +1,94 @@
+#!/bin/sh
+set -e
+
+function error() {
+    echo >&2 "${0##*/}: error: ${1}"
+    exit 1
+}
+
+function check() {
+    echo -n "Checking for ${1}... "
+}
+
+function assert() {
+    check "$1"
+
+    if [ "$2" != "$3" ] ; then
+        check_fail "$4"
+    fi
+
+    check_ok
+}
+
+function check_ok() {
+    echo "ok"
+}
+
+function check_fail() {
+    echo "fail"
+    error "$1"
+}
+
+function checkDependency() {
+    check "$1"
+
+    if ! type -p "$1" ; then
+        echo "not found"
+        error "${1} command is not found, but is required to continue."
+    fi
+}
+
+sysconfdir=/etc
+bindir=/usr/local/bin
+vgname=
+
+while [ -n "$1" ] ; do
+    case $1 in
+        --help)
+            echo "List of available options:"
+            echo
+            echo "    --help        Show this help message."
+            echo "    --sysconfdir  System configuration directory."
+            echo "    --bindir      Target directory for scripts installation."
+            echo "    --vgname      Name of volume group to use."
+            echo
+            exit 0
+        ;;
+        --sysconfdir=*)
+            sysconfdir=${1#--sysconfdir=}
+        ;;
+        --bindir=*)
+            bindir=${1#--bindir=}
+        ;;
+        --vgname=*)
+            vgname=${1#--vgname=}
+        ;;
+        *)
+            error "Unknown parameter: $1. See --help for list of available parameters."
+        ;;
+    esac
+    shift
+done
+
+checkDependency readlink
+
+check "bindir is set and is valid"
+bindir=$( readlink -f "$bindir" )
+[ -n "$bindir" -a -d "$bindir" ] && echo "$bindir" || check_fail "Please, provide a valid bindir"
+
+check "sysconfdir is set and is valid"
+sysconfdir=$( readlink -f "$sysconfdir" )
+[ -n "$sysconfdir" -a -d "$sysconfdir" ] && echo "$sysconfdir" || check_fail "Please, provide a valid sysconfdir"
+
+check "volume group name is set"
+[ -n "$vgname" ] && echo "$vgname" || check_fail "Please, provide --vgname parameter"
+
+checkDependency systemd-escape
+assert "systemd-esape slash" "$( systemd-escape -p / )" "-" "systemd-escape does not handle slash as expected"
+assert "systemd-esape minus" "$( systemd-escape -p - )" "\\x2d" "systemd-escape does not handle minus as expected"
+checkDependency sed
+assert "sed replace behavior" "$( echo 'dev-mapper-#VGNAME#_home_%i' | sed 's/#VGNAME#/MyVG/' )" "dev-mapper-MyVG_home_%i" "sed does not work as expected"
+
+echo "Generating Makefile"
+sed -e "s@#vgname#@$vgname@g" -e "s@#bindir#@$bindir@g" -e "s@#sysconfdir#@$sysconfdir@g" Makefile.in > Makefile
+

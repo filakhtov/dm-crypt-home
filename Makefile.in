@@ -1,0 +1,11 @@
+.PHONY: build
+
+install: build
+	#
+
+build: dm-crypt-home@.service
+
+dm-crypt-home@.service:
+	@cp dm-crypt-home@.service.dist dm-crypt-home@.service
+	@sed -e 's/#VGNAME#/#vgname#/g' -e "s/#VGNAME_ESCAPED#/$$( systemd-escape -p "#vgname#" )/g" \
+	    dm-crypt-home@.service.dist > dm-crypt-home@.service
