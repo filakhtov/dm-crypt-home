@@ -5,14 +5,14 @@ Conflicts=umount.target
 IgnoreOnIsolate=true
 Before=user@%i.service umount.target
 Requires=user@%i.service
-BindsTo=dev-mapper-LVM_VG\x2dhome_1000.device
-After=dev-mapper-LVM_VG\x2dhome_1000.device
+BindsTo=dev-mapper-#VGNAME_ESCAPED#\x2dhome_1000.device
+After=dev-mapper-#VGNAME_ESCAPED#\x2dhome_1000.device
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 TimeoutSec=0
-ExecStart=/usr/local/bin/dm-crypt-home-mount.sh "%i" "/dev/mapper/LVM_VG-home_%i"
+ExecStart=/usr/local/bin/dm-crypt-home-mount.sh "%i" "/dev/mapper/#VGNAME#-home_%i"
 ExecStop=/usr/local/bin/dm-crypt-home-umount.sh "%i"
 
 [Install]
