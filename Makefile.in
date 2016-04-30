@@ -1,0 +1,19 @@
+.PHONY: build
+
+install: build
+	install -c -m 0755 -o root -g root \
+	    dm-crypt-home-mount.sh \
+	    dm-crypt-home-password.sh \
+	    dm-crypt-home-umount.sh \
+		${DESTDIR}#bindir#
+	install -c -m 0644 -o root -g root \
+	    dm-crypt-home@.service \
+		${DESTDIR}#sysconfdir#/systemd/system
+
+
+build: dm-crypt-home@.service
+
+dm-crypt-home@.service:
+	@cp dm-crypt-home@.service.dist dm-crypt-home@.service
+	@sed -e 's/#VGNAME#/#vgname#/g' -e "s/#VGNAME_ESCAPED#/$$( systemd-escape -p "#vgname#" )/g" \
+	    dm-crypt-home@.service.dist > dm-crypt-home@.service
