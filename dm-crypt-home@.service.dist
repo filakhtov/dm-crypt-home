@@ -12,8 +12,8 @@ After=dev-mapper-#VGNAME_ESCAPED#\x2dhome_1000.device
 Type=oneshot
 RemainAfterExit=yes
 TimeoutSec=0
-ExecStart=#bindir#/dm-crypt-home-mount.sh "%i" "/dev/mapper/#VGNAME#-home_%i"
-ExecStop=#bindir#/dm-crypt-home-umount.sh "%i"
+ExecStart=#BINDIR#/dm-crypt-home-mount.sh "%i" "/dev/mapper/#VGNAME#-home_%i"
+ExecStop=#BINDIR#/dm-crypt-home-umount.sh "%i"
 
 [Install]
 RequiredBy=user@%i.service

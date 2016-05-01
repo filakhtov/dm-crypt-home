@@ -32,10 +32,22 @@ function check_fail() {
 function checkDependency() {
     check "$1"
 
-    if ! type -p "$1" ; then
-        echo "not found"
-        error "${1} command is not found, but is required to continue."
+    if type -p "$1" ; then
+        return
     fi
+
+    local location
+    location=$( whereis -b "$1" )
+
+    for file in $location ; do
+        if [ "$( basename "$file" )" == "$1" ] ; then
+            echo "$file"
+            return
+        fi
+    done
+
+    echo "not found"
+    error "${1} command is not found, but is required to continue."
 }
 
 sysconfdir=/etc
@@ -70,6 +82,8 @@ while [ -n "$1" ] ; do
     shift
 done
 
+checkDependency whereis
+checkDependency basename
 checkDependency readlink
 
 check "bindir is set and is valid"
@@ -83,6 +97,12 @@ sysconfdir=$( readlink -f "$sysconfdir" )
 check "volume group name is set"
 [ -n "$vgname" ] && echo "$vgname" || check_fail "Please, provide --vgname parameter"
 
+checkDependency keyctl
+checkDependency cryptsetup /sbin/cryptsetup /usr/sbin/cryptsetup
+checkDependency fuser
+checkDependency mount
+checkDependency umount
+checkDependency id
 checkDependency systemd-escape
 assert "systemd-esape slash" "$( systemd-escape -p / )" "-" "systemd-escape does not handle slash as expected"
 assert "systemd-esape minus" "$( systemd-escape -p - )" "\\x2d" "systemd-escape does not handle minus as expected"
@@ -91,4 +111,3 @@ assert "sed replace behavior" "$( echo 'dev-mapper-#VGNAME#_home_%i' | sed 's/#V
 
 echo "Generating Makefile"
 sed -e "s@#vgname#@$vgname@g" -e "s@#bindir#@$bindir@g" -e "s@#sysconfdir#@$sysconfdir@g" Makefile.in > Makefile
-

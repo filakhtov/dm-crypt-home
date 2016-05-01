@@ -1,19 +1,34 @@
 .PHONY: build
 
+build: dm-crypt-home@.service
+
 install: build
-	install -c -m 0755 -o root -g root \
+	install -d -m 0755 ${DESTDIR}#bindir#
+	install -c -m 0755 \
 	    dm-crypt-home-mount.sh \
 	    dm-crypt-home-password.sh \
 	    dm-crypt-home-umount.sh \
 		${DESTDIR}#bindir#
-	install -c -m 0644 -o root -g root \
+	install -d -m 0755 ${DESTDIR}#sysconfdir#/systemd/system
+	install -c -m 0644 \
 	    dm-crypt-home@.service \
 		${DESTDIR}#sysconfdir#/systemd/system
-
-
-build: dm-crypt-home@.service
+	@echo
+	@echo "    Now you need to enable pam.d exec module to save login password"
+	@echo "    into kernel keyring during authnetication."
+	@echo "    Insert the following line:"
+	@echo
+	@echo "        auth optional pam_exec.so expose_authtok #bindir#/dm-crypt-home-password.sh"
+	@echo
+	@echo "    into #sysconfdir#/pam.d/system-auth file right after pam_unix.so"
+	@echo
 
 dm-crypt-home@.service:
-	@cp dm-crypt-home@.service.dist dm-crypt-home@.service
-	@sed -e 's/#VGNAME#/#vgname#/g' -e "s/#VGNAME_ESCAPED#/$$( systemd-escape -p "#vgname#" )/g" \
-	    dm-crypt-home@.service.dist > dm-crypt-home@.service
+	@sed -e 's@#VGNAME#@#vgname#@g' \
+	     -e "s@#VGNAME_ESCAPED#@$$( systemd-escape -p "#vgname#" )@g" \
+	     -e 's@#BINDIR#@#bindir#@g' \
+		dm-crypt-home@.service.dist > .dm-crypt-home@.service.tmp
+	@mv .dm-crypt-home@.service.tmp dm-crypt-home@.service
+
+clean:
+	-@rm -fv .dm-crypt-home@.service.tmp dm-crypt-home@.service
