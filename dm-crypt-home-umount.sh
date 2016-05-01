@@ -5,7 +5,7 @@ userId="$1"
 userName="$( id -nu "$userId" )"
 homeDirectory="$( eval echo "~${userName}" )"
 
-while fuser -k -m "$homeDirectory" > /dev/null ; do
+while fuser -k -s -m "$homeDirectory" ; do
     sleep 1
 done
 
