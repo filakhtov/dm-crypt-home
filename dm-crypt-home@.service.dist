@@ -5,8 +5,8 @@ Conflicts=umount.target
 IgnoreOnIsolate=true
 Before=user@%i.service umount.target
 Requires=user@%i.service
-BindsTo=dev-mapper-#VGNAME_ESCAPED#\x2dhome_1000.device
-After=dev-mapper-#VGNAME_ESCAPED#\x2dhome_1000.device
+BindsTo=dev-mapper-#VGNAME_ESCAPED#\x2dhome_%i.device
+After=dev-mapper-#VGNAME_ESCAPED#\x2dhome_%i.device
 
 [Service]
 Type=oneshot
