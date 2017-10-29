@@ -10,6 +10,7 @@ After=dev-mapper-#VGNAME_ESCAPED#\x2dhome_%i.device
 
 [Service]
 Type=oneshot
+KeyringMode=shared
 RemainAfterExit=yes
 TimeoutSec=0
 ExecStart=#BINDIR#/dm-crypt-home-mount.sh "%i" "/dev/mapper/#VGNAME#-home_%i"
